@@ -1,0 +1,24 @@
+#menuoption {
+    display: none !important;
+}
+.head {
+    padding-top: 0;
+    padding-left: 300px;
+}
+i{
+    vertical-align: middle !important;
+}
+.table-of-contents a.active {
+    font-weight: 500;
+    padding: 0 32px !important;
+    border-left: 0 !important;
+    color: #ee6e73 !important;
+}
+@media only screen and (max-width : 992px) {
+    .head {
+        padding-left: 0;
+    }
+    #menuoption {
+        display: block !important;
+    }
+}

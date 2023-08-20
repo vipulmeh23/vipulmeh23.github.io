@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style type="text/css">
+        #bmiVal {
+            border: 0px solid #000;
+            width: 60px;
+            height: 50px;
+            margin: 0 auto;
+            position: relative;
+            font-size: 40px;
+            font-family: Verdana;
+            font-weight: bold;
+            color: #3c3c3c;
+            top: -105%;
+        }
+        #infoTabTwo {
+            border: 0px solid #000;
+            width: 768px;
+            height: 50px;
+            margin: 0 auto;
+            font-size: 20px;
+            color: #3c3c3c;
+            font-family: Verdana;
+            font-weight: bold;
+            position: relative;
+            top: -66%;
+        }
+        #infoTab {
+            border: 0px solid #000;
+            width: 768px;
+            height: 50px;
+            margin: 0 auto;
+            position: relative;
+            top: -60%;
+        }
+        #gauge {
+            width: 100%;
+            height: 100%;
+            -webkit-transform: rotateX(180deg);
+            transform: rotateX(180deg);
+        }
+        .meterContainer {
+            width: 768px;
+            z-index: 300;
+            padding: 0;
+            text-align: center;
+            position: relative;
+            margin: 0 auto;
+            border: 0;
+            top: -75%;
+        }
+        #meter_needle {
+            height: 200%;
+            left: 0;
+            margin: 0;
+            position: relative;
+            right: 0;
+            top: 0%;
+            -webkit-transform-origin: bottom center;
+            transform-origin: bottom center;
+            -webkit-transform: rotateX(270deg);
+            transform: rotate(270deg);
+        }
+    </style>
+    <meta charset="UTF-8">
+    <title>Javascript Based ShoutBox</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</head>
+<body onload="ajaxPolling()">
+
+<div class="wrapper" style="width: 768px; height: auto; overflow: auto; margin: 0 auto; border: 0px solid #000">
+
+    <h1 style="color:#ff8d00">CheckYourBMI</h1>
+    <br />
+    <div class="panel panel-default">
+        <div class="panel-heading">Enter your details</div>
+        <div class="panel-body" id="parentPanel">
+            <button id="stepZero" onclick="addAge()" class="btn btn-primary">Check Your BMI Now!</button>
+        </div>
+    </div>
+
+</div>
+<div class="infoWrapper" style="width: 768px; height: 400px; background: #fff; margin: 0 auto; border: 0px solid #000">
+    <svg id="gauge">
+        <circle id="low" r="150" cx="50%" cy="50%" stroke="#f6f6f6" stroke-dasharray="471, 943" stroke-width="55" fill="none"></circle>
+        <circle id="low" r="150" cx="50%" cy="50%" stroke="yellow" stroke-dasharray="471, 943" stroke-width="50" fill="none"></circle>
+        <circle id="low" r="150" cx="50%" cy="50%" stroke="#77dd77" stroke-dasharray="314, 943" stroke-width="50" fill="none"></circle>
+        <circle id="low" r="150" cx="50%" cy="50%" stroke="#E04644" stroke-dasharray="157, 943" stroke-width="50" fill="none"></circle>
+    </svg>
+    <div class="meterContainer">
+        <img id="meter_needle" src="needle.svg" alt="">
+    </div>
+    <div id="bmiVal"></div>
+    <div id="infoTabTwo">
+    </div>
+    <div id="infoTab">
+        <span style="color: #000000; background-color: yellow" class="label label-default">UNDERWEIGHT BMI: 16-18.5</span>
+        <span style="background-color: #77dd77" class="label label-primary">NORMAL BMI: 18.5-25</span>
+        <span style="background-color: #E04644" class="label label-success">OBESE BMI: 25-40</span>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+
+    var age, gender, height, unitWeight, unitHeight = 0;
+    var bmiInfo = [];
+    const _startBmi_ = 16;
+    const _rangeOne_ = 18.5;
+    const _rangeTwo_ = 25;
+    const _rangeThree_ = 40;
+
+    function addAge(){
+        var parent = document.getElementById("parentPanel");
+        var oldNode = document.getElementById("stepZero");
+        var newNode = document.createElement("input");
+        newNode.setAttribute("type", "text");
+        newNode.setAttribute("id", "stepOne");
+        newNode.setAttribute("class", "form-control");
+        newNode.setAttribute("size", "50px");
+        newNode.setAttribute("placeholder", "Enter Your Age");
+        parent.replaceChild(newNode, oldNode);
+        newNode.setAttribute("onkeypress", "detectKeyboardKey(event, this)");
+    }
+    function detectKeyboardKey(e, t){
+        if(t.value === ""){
+            return false;
+        }
+        var id = t.getAttribute("Id");
+        var event = e || window.event;
+        var charCode = event.which || event.keyCode;
+        if ( charCode == '13' ) {
+            if(id == "stepOne")
+            {
+                var valueOfAge = t.value;
+                return askGender(valueOfAge);
+            } else if(id == "stepThree"){
+                height = t.value;
+                return askUnits(id);
+            }else if(id == "stepFour"){
+                return askUnits(id);
+            }else if(id=="stepFive"){
+                weight = t.value;
+                return askUnits(id);
+            }else {
+                return false;
+            }
+
+        }
+    }
+    function askGender(valueOfAge) {
+        age = valueOfAge;
+        console.log("The age is : "+ age);
+        var optionsArray = ["Select Your Gender", "Male", "Female"];
+        var optionValues = [0, "m", "f"];
+        var parent = document.getElementById("parentPanel");
+        var oldNode = document.getElementById("stepOne");
+        var newNode = document.createElement("select");
+        newNode.setAttribute("id", "stepTwo");
+        newNode.setAttribute("class", "form-control");
+        newNode.setAttribute("onchange", "confirmGender(this)");
+        parent.replaceChild(newNode, oldNode);
+        for (var i = 0; i < optionsArray.length; i++) {
+            var option = document.createElement("option");
+            option.value = optionValues[i];
+            option.text = optionsArray[i];
+            newNode.appendChild(option);
+        }
+    }
+
+    function confirmGender(node){
+        var Answer = confirm("Lets Proceed?");
+        if(Answer == true){
+            gender = node.value;
+            askHeight();
+        }else {
+            return false;
+        }
+    }
+    function askHeight(){
+        var parent = document.getElementById("parentPanel");
+        var oldNode = document.getElementById("stepTwo");
+        var newNode = document.createElement("input");
+        newNode.setAttribute("type", "text");
+        newNode.setAttribute("id", "stepThree");
+        newNode.setAttribute("class", "form-control");
+        newNode.setAttribute("size", "50px");
+        newNode.setAttribute("placeholder", "Enter Your Height");
+        newNode.setAttribute("onkeypress", "detectKeyboardKey(event, this)");
+        parent.replaceChild(newNode, oldNode)
+    }
+    function askUnits(id){
+        if(id == "stepThree" ) {
+            var optionsArray = ["Select Height Units", "Centimeter", "Meter"];
+            var optionValues = [0, "cm", "m"];
+            var parent = document.getElementById("parentPanel");
+            var newNode = document.createElement("select");
+            newNode.setAttribute("id", "stepFour");
+            newNode.setAttribute("class", "form-control");
+            parent.appendChild(newNode);
+            for (var i = 0; i < optionsArray.length; i++) {
+                var option = document.createElement("option");
+                option.value = optionValues[i];
+                option.text = optionsArray[i];
+                newNode.appendChild(option);
+            }
+            newNode.setAttribute("onchange", "confirmUnits(this)");
+        }else if(id == "stepFive"){
+            var optionsArray = ["Select Weight Units", "Kg", "Lb"];
+            var optionValues = [0, "kg", "lb"];
+            var parent = document.getElementById("parentPanel");
+            var newNode = document.createElement("select");
+            newNode.setAttribute("id", "stepSix");
+            newNode.setAttribute("class", "form-control");
+            parent.appendChild(newNode);
+            for (var i = 0; i < optionsArray.length; i++) {
+                var option = document.createElement("option");
+                option.value = optionValues[i];
+                option.text = optionsArray[i];
+                newNode.appendChild(option);
+            }
+            newNode.setAttribute("onchange", "confirmUnits(this)");
+        }
+    }
+
+    function confirmUnits(t){
+        var Answer = confirm("Lets Proceed?");
+        if(Answer == true && t.id == "stepFour"){
+            unitHeight = t.value;
+            askWeight();
+        }else {
+            unitWeight = t.value;
+            console.log("The weight selected : "+ unitWeight);
+            return drawInfo();
+        }
+    }
+
+    function askWeight(){
+        var parent = document.getElementById("parentPanel");
+        var oldNode = document.getElementById("stepThree");
+        var elem = document.getElementById("stepFour");
+        elem.parentElement.removeChild(elem);
+        var newNode = document.createElement("input");
+        newNode.setAttribute("type", "text");
+        newNode.setAttribute("id", "stepFive");
+        newNode.setAttribute("class", "form-control");
+        newNode.setAttribute("size", "50px");
+        newNode.setAttribute("placeholder", "Enter Your Weight");
+        newNode.setAttribute("onkeypress", "detectKeyboardKey(event, this)");
+        parent.replaceChild(newNode, oldNode)
+    }
+
+    function drawInfo(){
+        var parent = document.getElementById("parentPanel");
+        var oldNode = document.getElementById("stepFive");
+        var elem = document.getElementById("stepSix");
+        elem.parentElement.removeChild(elem);
+        var newNode = document.createElement("p");
+        newNode.setAttribute("id", "info");
+        var textNode = document.createTextNode("Your Age is: "+age+", Your Height is: "+height+" "+unitHeight+", Your Weight is: "+weight+" "+unitWeight);
+        var buttonNode = document.createElement("button");
+        var breakNode = document.createElement("br");
+        buttonNode.setAttribute("class", "btn btn-primary");
+        buttonNode.setAttribute("id", "submitForm");
+        buttonNode.setAttribute("onclick", "getBMI()");
+        var buttonText = document.createTextNode("CONFIRM INFO AND FIND BMI");
+        buttonNode.appendChild(buttonText);
+        parent.replaceChild(newNode, oldNode);
+        newNode.appendChild(textNode);
+        newNode.appendChild(breakNode);
+        newNode.appendChild(buttonNode);
+    }
+
+    function getBMI(){
+        var parent = document.getElementById("parentPanel");
+        var elem = document.getElementById("submitForm");
+        elem.parentElement.removeChild(elem);
+        var buttonNode = document.createElement("button");
+        var breakNode = document.createElement("br");
+        buttonNode.setAttribute("class", "btn btn-primary");
+        buttonNode.setAttribute("id", "resetForm");
+        buttonNode.setAttribute("onclick", "resetForm()");
+        var buttonText = document.createTextNode("START AGAIN");
+        buttonNode.appendChild(buttonText);
+        parent.appendChild(buttonNode);
+        var url = "https://people.rit.edu/~vm8176/HandsOn/bmi/curl/curl.php?age="+age+"&sex="+gender+"&height="+height+"&unitH="+unitHeight+"&weight="+weight+"&unitW="+unitWeight;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                bmiInfo = JSON.parse(this.response);
+                rotateGauge(bmiInfo.bmi.value, bmiInfo.bmi.status);
+            }
+        };
+        xhttp.open("GET", url, true);
+        xhttp.send();
+    }
+
+    function rotateGauge(bmiValue, bmiStatus){
+        bmiValue = parseInt(bmiValue);
+        if(bmiValue <= 18.5){
+            console.log("Less than 18.5");
+            var units = Math.abs(bmiValue - _startBmi_);
+            var degreeOfRotation = (270 + units*24);
+            console.log(bmiValue);
+            document.getElementById("meter_needle").style.transform = 'rotate('+degreeOfRotation+'deg)';
+            var textVal = document.createTextNode(bmiValue);
+            var nodeVal = document.getElementById("bmiVal");
+            var infoTwo = document.getElementById("infoTabTwo");
+            var textInfo = document.createTextNode("Your Status: "+bmiStatus);
+            infoTwo.appendChild(textInfo);
+            nodeVal.appendChild(textVal);
+        }else if(bmiValue > 18.5 && bmiValue <= 25){
+            console.log("Less than = 25 greater than 18.5 ");
+            var units = Math.abs(bmiValue - _rangeOne_);
+            var degreeOfRotation = (330 + units*9.23);
+            console.log(bmiValue);
+            document.getElementById("meter_needle").style.transform = 'rotate('+degreeOfRotation+'deg)';
+            var textVal = document.createTextNode(bmiValue);
+            var nodeVal = document.getElementById("bmiVal");
+            var infoTwo = document.getElementById("infoTabTwo");
+            var textInfo = document.createTextNode("Your Status: "+bmiStatus);
+            infoTwo.appendChild(textInfo);
+            nodeVal.appendChild(textVal);
+        } else if(bmiValue > 25 && bmiValue <= 40)
+        {
+            console.log("Less than 40 greater than 25 ");
+            var units = Math.abs(bmiValue - _rangeTwo_);
+            var degreeOfRotation = (390 + units*4);
+            console.log(bmiValue);
+            document.getElementById("meter_needle").style.transform = 'rotate('+degreeOfRotation+'deg)';
+            var textVal = document.createTextNode(bmiValue);
+            var nodeVal = document.getElementById("bmiVal");
+            var infoTwo = document.getElementById("infoTabTwo");
+            var textInfo = document.createTextNode("Your Status: "+bmiStatus);
+            infoTwo.appendChild(textInfo);
+            nodeVal.appendChild(textVal);
+        }else if(bmiValue < _startBmi_){
+            var elem = document.getElementById("bmiVal");
+            elem.parentElement.removeChild(bmiVal);
+            var degreeOfRotation = 270;
+            document.getElementById("meter_needle").style.transform = 'rotate('+degreeOfRotation+'deg)';
+            var textVal = document.createTextNode(bmiValue);
+            var nodeVal = document.getElementById("bmiVal");
+            var infoTwo = document.getElementById("infoTabTwo");
+            var textInfo = document.createTextNode("Your Status: "+bmiStatus);
+            infoTwo.appendChild(textInfo);
+            nodeVal.appendChild(textVal);
+        } else {
+            alert("Either realistic values!")
+        }
+    }
+    function resetForm(){
+        window.location.reload(true);
+    }
+</script>
+
+</body>
+</html>
